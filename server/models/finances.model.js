@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const User = require('./user.model.js'); // Ensure the path is correct
+const User = require('./user.model.js');
 
 const farmSchema = new mongoose.Schema({
     farm_name: { 

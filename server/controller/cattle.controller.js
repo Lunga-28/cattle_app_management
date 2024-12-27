@@ -1,10 +1,6 @@
-const express = require('express');
 const Cattle = require('../models/cattle.model');
-const router = express.Router();
-const authenticate = require('../middleware/authenticate');
 
-// Add new cattle
-router.post('/', authenticate, async (req, res) => {
+exports.addCattle = async (req, res) => {
   try {
     const cattle = new Cattle({ ...req.body, createdBy: req.user.id });
     await cattle.save();
@@ -12,20 +8,18 @@ router.post('/', authenticate, async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: 'Failed to add cattle' });
   }
-});
+};
 
-// Get all cattle for the user
-router.get('/', authenticate, async (req, res) => {
+exports.getCattle = async (req, res) => {
   try {
     const cattle = await Cattle.find({ createdBy: req.user.id });
     res.json(cattle);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch cattle' });
   }
-});
+};
 
-// Update cattle
-router.put('/:id', authenticate, async (req, res) => {
+exports.updateCattle = async (req, res) => {
   try {
     const cattle = await Cattle.findOneAndUpdate(
       { _id: req.params.id, createdBy: req.user.id },
@@ -38,10 +32,9 @@ router.put('/:id', authenticate, async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: 'Failed to update cattle' });
   }
-});
+};
 
-// Delete cattle
-router.delete('/:id', authenticate, async (req, res) => {
+exports.deleteCattle = async (req, res) => {
   try {
     const cattle = await Cattle.findOneAndDelete({
       _id: req.params.id,
@@ -53,6 +46,4 @@ router.delete('/:id', authenticate, async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete cattle' });
   }
-});
-
-module.exports = router;
+};
