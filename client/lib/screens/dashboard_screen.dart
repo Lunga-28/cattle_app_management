@@ -4,7 +4,8 @@ import '../widgets/dashboard_item.dart';
 class DashboardScreen extends StatefulWidget {
   final String farmId; // Add farmId parameter
 
-  const DashboardScreen({super.key, required this.farmId}); // Require farmId in constructor
+  const DashboardScreen(
+      {super.key, required this.farmId}); // Require farmId in constructor
 
   @override
   _DashboardScreenState createState() => _DashboardScreenState();
@@ -18,7 +19,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     // Pass the farmId to DashboardScreenContent
     final List<Widget> pages = [
       DashboardScreenContent(farmId: widget.farmId), // Home (Dashboard)
-      MessagesScreen(), // Messages
       ProfileScreen(), // Profile
     ];
 
@@ -57,7 +57,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             icon: Icon(Icons.dashboard),
             label: 'Dashboard',
           ),
-
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
             label: 'Profile',
@@ -76,7 +75,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
 class DashboardScreenContent extends StatelessWidget {
   final String farmId; // Add farmId parameter
 
-  DashboardScreenContent({super.key, required this.farmId}); // Require farmId in constructor
+  DashboardScreenContent(
+      {super.key, required this.farmId}); // Require farmId in constructor
 
   final List<Map<String, dynamic>> dashboardItems = [
     {'title': 'Inventory', 'icon': Icons.inventory, 'route': '/inventory'},
@@ -113,14 +113,12 @@ class DashboardScreenContent extends StatelessWidget {
               route: dashboardItems[index]['route'],
               farmId: farmId, // Pass farmId to DashboardItem
             );
-          },  
+          },
         ),
       ),
     );
   }
 }
-
-
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});

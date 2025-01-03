@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:poultry_farm_app/staff/staff_page.dart';
 import 'welcome_screen.dart';
-import 'utils/color_utils.dart';
 import 'screens/dashboard_screen.dart';
 import 'login_screen.dart';
+import 'colors.dart';
 
 void main() {
   runApp(CattleFarmApp());
@@ -25,9 +24,9 @@ class CattleFarmApp extends StatelessWidget {
           );
         } else if (settings.name == '/finances') {
           final String farmId = settings.arguments as String;
-          return MaterialPageRoute(
+          /*return MaterialPageRoute(
             builder: (context) => FinancePage(farmId: farmId),
-          );
+          );*/
         }
         return null;
       },
@@ -36,7 +35,8 @@ class CattleFarmApp extends StatelessWidget {
         '/login': (context) => const loginScreen(),
       },
       theme: ThemeData(
-        primarySwatch: createMaterialColor(const Color.fromARGB(255, 145, 0, 150)),
+        primarySwatch:
+            createMaterialColor(const Color.fromARGB(255, 145, 0, 150)),
         fontFamily: 'Roboto',
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
