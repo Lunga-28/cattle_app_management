@@ -9,7 +9,7 @@ exports.addCattle = async (req, res) => {
     res.status(500).json({ error: 'Failed to add cattle' });
   }
 };
-
+ 
 exports.getCattle = async (req, res) => {
   try {
     const cattle = await Cattle.find({ createdBy: req.user.id });
