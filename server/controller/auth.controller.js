@@ -1,86 +1,140 @@
-const User = require("../model/user.model.js");
-const Farm = require("../model/farm.model.js");
-const Staff = require('../model/staff.model.js');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const errorHandling = require("../utils/error.js");
-const crypto = require('crypto');
+const User = require("../models/user.model.js");
+const bcryptjs = require("bcryptjs");
+const errorHandler = require("../utils/error.js");
+const jwt = require("jsonwebtoken");
 
-// Standard sign-up function with farm creation for owners/managers
 const signup = async (req, res, next) => {
-    const { username, email, password, role, farm_name } = req.body;
-
-    // Log incoming request data
-    console.log('Request to standard sign-up:', req.body);
-
-    if (!username || !email || !password) {
-        return next(errorHandling(400, 'All fields are required'));
+    const { username, email, password, farm_code, farm_name } = req.body;
+    // Check if required fields are empty
+    if (!username || !email || !password ||
+        username.trim() === "" ||
+        email.trim() === "" ||
+        password.trim() === "") {
+        return next(errorHandler(400, "Username, email and password are required"));
     }
-
+   
+    const hashedpass = bcryptjs.hashSync(password, 10);
+    const newUser = new User({
+        username,
+        email,
+        password: hashedpass,
+        farm_code: farm_code || null,
+        farm_name: farm_name || null
+    });
+   
     try {
-        // Create the user first
-        const hashPassword = bcrypt.hashSync(password, 10);
-        const newUser = new User({
-            username,
-            email,
-            password: hashPassword,
-            
-        });
-
-        const savedUser = await newUser.save();
-
-        // Create the farm if the role is 'owner' or 'manager'
-
-
-            const newFarm = new Farm({
-                farm_name,
-                farm_code: crypto.randomBytes(4).toString('hex'), // Generate a unique farm code
-                owner: savedUser._id, // Use the saved user's ObjectId
-            });
-
-            await newFarm.save();
-        
-
-        res.status(201).json({ message: 'User and farm created successfully' });
-    } catch (error) {
-        console.error('Error during standard signup:', error);
+        await newUser.save();
+        res.json("Signup successful");
+    } catch(error) {
+        // Handle unique constraint violations
+        if (error.code === 11000) {
+            if (error.keyPattern.username) {
+                return next(errorHandler(400, "Username already exists"));
+            }
+            if (error.keyPattern.email) {
+                return next(errorHandler(400, "Email already exists"));
+            }
+            if (error.keyPattern.farm_code) {
+                return next(errorHandler(400, "Farm code already exists"));
+            }
+        }
         next(error);
     }
 };
 
-// Sign-in function
 const signin = async (req, res, next) => {
     const { email, password } = req.body;
-
-    // Log incoming request data
-    console.log('Request to sign in:', req.body);
-
-    if (!email || !password || email === '' || password === '') {
-        return next(errorHandling(400, 'All fields are required'));
+    if (!email || !password ||
+        email.trim() === "" ||
+        password.trim() === "") {
+        return next(errorHandler(400, "All fields are required"));
     }
-
+   
     try {
-        const user = await User.findOne({ email });
-
-        if (!user) {
-            return next(errorHandling(404, 'User not found'));
+        const validuser = await User.findOne({ email });
+        if (!validuser) {
+            return next(errorHandler(404, "User not found"));
         }
-
-        const isMatch = bcrypt.compareSync(password, user.password);
-
+       
+        const isMatch = bcryptjs.compareSync(password, validuser.password);
         if (!isMatch) {
-            return next(errorHandling(401, 'Invalid credentials'));
+            return next(errorHandler(400, "Invalid credentials"));
         }
-
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
-        const { password: pass, ...rest } = user._doc;
-        res.status(200).cookie('access_token', token, {
-            httpOnly: true,
-        }).json(rest);
+       
+        const token = jwt.sign(
+            { 
+                id: validuser._id,
+                farm_code: validuser.farm_code
+            },
+            process.env.JWT_SECRET
+        );
+       
+        const { password: pass, ...rest } = validuser._doc;
+       
+        res.status(200)
+           .cookie('access_token', token, { httpOnly: true })
+           .json(rest);
     } catch (error) {
-        console.error('Error during sign-in:', error);
         next(error);
     }
 };
 
-module.exports = { signup, signin };
+const google = async (req, res, next) => {
+    const { name, email, googlePhotoUrl } = req.body;
+    try {
+        const user = await User.findOne({ email });
+        if (user) {
+            const token = jwt.sign(
+                { 
+                    id: user._id,
+                    farm_code: user.farm_code
+                },
+                process.env.JWT_SECRET
+            );
+            const { password, ...rest } = user._doc;
+            res.status(200)
+               .cookie('access_token', token, { httpOnly: true })
+               .json(rest);
+        } else {
+            const generatedPassword =
+                Math.random().toString(36).slice(-8) +
+                Math.random().toString(36).slice(-8);
+            const hashedPassword = bcryptjs.hashSync(generatedPassword, 10);
+           
+            const newUser = new User({
+                username: name.toLowerCase().split(' ').join('') +
+                         Math.random().toString(9).slice(-4),
+                email,
+                password: hashedPassword,
+                profilePicture: googlePhotoUrl,
+                farm_code: null,
+                farm_name: null
+            });
+           
+            await newUser.save();
+            const token = jwt.sign(
+                { 
+                    id: newUser._id,
+                    farm_code: newUser.farm_code
+                },
+                process.env.JWT_SECRET
+            );
+           
+            const { password, ...rest } = newUser._doc;
+            res.status(200)
+               .cookie('access_token', token, { httpOnly: true })
+               .json(rest);
+        }
+    } catch(error) {
+        if (error.code === 11000) {
+            return next(errorHandler(400, "User with this email already exists"));
+        }
+        next(error);
+    }
+};
+
+module.exports = {
+    signup,
+    signin,
+    google
+};

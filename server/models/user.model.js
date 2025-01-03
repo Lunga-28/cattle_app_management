@@ -1,11 +1,32 @@
 const mongoose = require('mongoose');
 
-const financesSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // Reference to the User
-  date: { type: Date, default: Date.now },
-  type: { type: String, enum: ['Income', 'Expense'], required: true },
-  amount: { type: Number, required: true },
-  description: { type: String, required: true },
+const userSchema = new mongoose.Schema({
+    username: {
+        type: String,
+        required: true,
+        unique: true,
+    },
+    email: {
+        type: String,
+        required: true,
+        unique: true,
+    },
+    password: {
+        type: String,
+        required: true,
+    },
+    farm_code: {
+        type: String,
+        required: false,
+        unique: true,
+    },
+    farm_name: {  
+        type: String,
+        // Make this field optional
+        required: false,
+    },
 }, { timestamps: true });
 
-module.exports = mongoose.model('Finance', financesSchema);
+const User = mongoose.model('User', userSchema);
+
+module.exports = User;
