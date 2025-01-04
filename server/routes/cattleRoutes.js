@@ -1,10 +1,10 @@
 const express = require('express');
 const Cattle = require('../models/cattle.model');
 const router = express.Router();
-const authenticate = require('../middleware/authenticate');
+
 
 // Add new cattle
-router.post('/', authenticate, async (req, res) => {
+router.post('/',  async (req, res) => {
   try {
     const cattle = new Cattle({ ...req.body, createdBy: req.user.id });
     await cattle.save();
@@ -15,7 +15,7 @@ router.post('/', authenticate, async (req, res) => {
 });
 
 // Get all cattle for the user
-router.get('/', authenticate, async (req, res) => {
+router.get('/',  async (req, res) => {
   try {
     const cattle = await Cattle.find({ createdBy: req.user.id });
     res.json(cattle);
@@ -25,7 +25,7 @@ router.get('/', authenticate, async (req, res) => {
 });
 
 // Update cattle
-router.put('/:id', authenticate, async (req, res) => {
+router.put('/:id',  async (req, res) => {
   try {
     const cattle = await Cattle.findOneAndUpdate(
       { _id: req.params.id, createdBy: req.user.id },
@@ -41,7 +41,7 @@ router.put('/:id', authenticate, async (req, res) => {
 });
 
 // Delete cattle
-router.delete('/:id', authenticate, async (req, res) => {
+router.delete('/:id',  async (req, res) => {
   try {
     const cattle = await Cattle.findOneAndDelete({
       _id: req.params.id,
