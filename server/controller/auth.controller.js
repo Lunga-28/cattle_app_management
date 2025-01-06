@@ -5,42 +5,42 @@ const jwt = require("jsonwebtoken");
 
 const signup = async (req, res, next) => {
     const { username, email, password, farm_code, farm_name } = req.body;
-    // Check if required fields are empty
-    if (!username || !email || !password ||
-        username.trim() === "" ||
-        email.trim() === "" ||
+
+    // Check required fields
+    if (!username || !email || !password || 
+        username.trim() === "" || 
+        email.trim() === "" || 
         password.trim() === "") {
-        return next(errorHandler(400, "Username, email and password are required"));
+        return next(errorHandler(400, "Username, email, and password are required"));
     }
-   
-    const hashedpass = bcryptjs.hashSync(password, 10);
-    const newUser = new User({
-        username,
-        email,
-        password: hashedpass,
-        farm_code: farm_code || null,
-        farm_name: farm_name || null
-    });
-   
+
     try {
+        // Hash the password
+        const hashedPassword = bcryptjs.hashSync(password, 10);
+
+        // Create new user
+        const newUser = new User({
+            username,
+            email,
+            password: hashedPassword,
+            farm_code: farm_code || null,
+            farm_name: farm_name || null,
+        });
+
+        // Save user to the database
         await newUser.save();
-        res.json("Signup successful");
-    } catch(error) {
+        res.status(201).json({ message: "Signup successful" });
+    } catch (error) {
         // Handle unique constraint violations
         if (error.code === 11000) {
-            if (error.keyPattern.username) {
-                return next(errorHandler(400, "Username already exists"));
-            }
-            if (error.keyPattern.email) {
-                return next(errorHandler(400, "Email already exists"));
-            }
-            if (error.keyPattern.farm_code) {
-                return next(errorHandler(400, "Farm code already exists"));
-            }
+            const duplicateField = Object.keys(error.keyPattern)[0];
+            const fieldName = duplicateField === "farm_code" ? "Farm code" : duplicateField;
+            return next(errorHandler(400, `${fieldName} already exists`));
         }
         next(error);
     }
 };
+
 
 const signin = async (req, res, next) => {
     const { email, password } = req.body;
@@ -50,6 +50,7 @@ const signin = async (req, res, next) => {
         return next(errorHandler(400, "All fields are required"));
     }
    
+    
     try {
         const validuser = await User.findOne({ email });
         if (!validuser) {
@@ -78,6 +79,7 @@ const signin = async (req, res, next) => {
         next(error);
     }
 };
+
 
 const google = async (req, res, next) => {
     const { name, email, googlePhotoUrl } = req.body;

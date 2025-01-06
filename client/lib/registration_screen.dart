@@ -10,80 +10,106 @@ class RegScreen extends StatefulWidget {
 }
 
 class _RegScreenState extends State<RegScreen> {
-  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController =
-      TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
   final TextEditingController _farmNameController = TextEditingController();
-  final TextEditingController _signUpCodeController =
-      TextEditingController(); // Controller for sign-up code
-
-  String _selectedRole = 'owner'; // Default role is owner
+  final TextEditingController _farmCodeController = TextEditingController();
+  
+  bool _isLoading = false;
 
   Future<void> _signup() async {
-    final String name = _nameController.text;
-    final String email = _emailController.text;
-    final String password = _passwordController.text;
-    final String confirmPassword = _confirmPasswordController.text;
-    final String farmName = _farmNameController.text;
-    final String signUpCode = _signUpCodeController.text;
+    // Basic validation
+    if (_usernameController.text.trim().isEmpty ||
+        _emailController.text.trim().isEmpty ||
+        _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Username, email, and password are required')),
+      );
+      return;
+    }
 
-    if (password != confirmPassword) {
+    // Password matching validation
+    if (_passwordController.text != _confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Passwords do not match')),
       );
       return;
     }
 
-    String url;
-    Map<String, dynamic> body;
+    // Create request body
+    final body = {
+      'username': _usernameController.text.trim(),
+      'email': _emailController.text.trim(),
+      'password': _passwordController.text,
+    };
 
-    if (_selectedRole == 'worker') {
-      // Staff registration with sign-up code
-      url = 'http://10.0.2.2:3000/api/auth/signup-with-code';
-      body = {
-        'code': signUpCode,
-        'email': email,
-        'password': password,
-        'name': name,
-      };
-    } else {
-      // Owner/Manager registration with farm creation
-      url = 'http://10.0.2.2:3000/api/auth/signup';
-      body = {
-        'username': name,
-        'email': email,
-        'password': password,
-        'role': _selectedRole,
-        'farm_name': farmName,
-      };
+    // Add optional fields only if they're not empty
+    final farmName = _farmNameController.text.trim();
+    final farmCode = _farmCodeController.text.trim();
+    
+    if (farmName.isNotEmpty) {
+      body['farm_name'] = farmName;
     }
+    
+    if (farmCode.isNotEmpty) {
+      body['farm_code'] = farmCode;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
 
     try {
       final response = await http.post(
-        Uri.parse(url),
+        Uri.parse('http://10.0.2.2:3000/api/auth/signup'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode(body),
       );
 
+      final responseData = json.decode(response.body);
+
       if (response.statusCode == 201) {
+        if (!mounted) return;
+        
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('User created successfully')),
+          const SnackBar(
+            content: Text('Registration successful! Please login to continue.'),
+            backgroundColor: Colors.green,
+          ),
         );
-        Navigator.pushReplacementNamed(context, '/dashboard');
+        
+        // Navigate to login screen instead of dashboard
+        Navigator.pushReplacementNamed(context, '/login');
       } else {
-        final responseData = json.decode(response.body);
+        if (!mounted) return;
+        
+        // Handle specific error messages from your backend
+        String errorMessage = responseData['message'] ?? 'Registration failed';
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content:
-                  Text('Failed to create user: ${responseData['message']}')),
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } catch (error) {
+      if (!mounted) return;
+      
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Network error: ${error.toString()}')),
+        SnackBar(
+          content: Text('Connection error: ${error.toString()}'),
+          backgroundColor: Colors.red,
+        ),
       );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -96,19 +122,19 @@ class _RegScreenState extends State<RegScreen> {
             height: double.infinity,
             width: double.infinity,
             decoration: const BoxDecoration(
-              gradient: LinearGradient(colors: [
-                Color(0xffB81736),
-                Color(0xff281537),
-              ]),
+              gradient: LinearGradient(
+                colors: [Color(0xffB81736), Color(0xff281537)],
+              ),
             ),
             child: const Padding(
               padding: EdgeInsets.only(top: 60.0, left: 22),
               child: Text(
-                'Create Your\nAccount',
+                'Register Your Account',
                 style: TextStyle(
-                    fontSize: 30,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold),
+                  fontSize: 30,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),
@@ -117,184 +143,132 @@ class _RegScreenState extends State<RegScreen> {
             child: Container(
               decoration: const BoxDecoration(
                 borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(40),
-                    topRight: Radius.circular(40)),
+                  topLeft: Radius.circular(40),
+                  topRight: Radius.circular(40),
+                ),
                 color: Colors.white,
               ),
               height: double.infinity,
               width: double.infinity,
               child: Padding(
-                padding: const EdgeInsets.only(left: 18.0, right: 18),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                padding: const EdgeInsets.symmetric(horizontal: 18.0),
+                child: ListView(
                   children: [
                     TextField(
-                      controller: _nameController,
+                      controller: _usernameController,
                       decoration: const InputDecoration(
-                          suffixIcon: Icon(
-                            Icons.check,
-                            color: Colors.grey,
-                          ),
-                          label: Text(
-                            'Full Name',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xffB81736),
-                            ),
-                          )),
+                        labelText: 'Username',
+                        labelStyle: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xffB81736),
+                        ),
+                        suffixIcon: Icon(Icons.person, color: Colors.grey),
+                      ),
                     ),
                     TextField(
                       controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
                       decoration: const InputDecoration(
-                          suffixIcon: Icon(
-                            Icons.check,
-                            color: Colors.grey,
-                          ),
-                          label: Text(
-                            'Email',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xffB81736),
-                            ),
-                          )),
+                        labelText: 'Email',
+                        labelStyle: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xffB81736),
+                        ),
+                        suffixIcon: Icon(Icons.email, color: Colors.grey),
+                      ),
                     ),
                     TextField(
                       controller: _passwordController,
                       obscureText: true,
                       decoration: const InputDecoration(
-                          suffixIcon: Icon(
-                            Icons.visibility_off,
-                            color: Colors.grey,
-                          ),
-                          label: Text(
-                            'Password',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xffB81736),
-                            ),
-                          )),
+                        labelText: 'Password',
+                        labelStyle: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xffB81736),
+                        ),
+                        suffixIcon: Icon(Icons.lock, color: Colors.grey),
+                      ),
                     ),
                     TextField(
                       controller: _confirmPasswordController,
                       obscureText: true,
                       decoration: const InputDecoration(
-                          suffixIcon: Icon(
-                            Icons.visibility_off,
-                            color: Colors.grey,
-                          ),
-                          label: Text(
-                            'Confirm Password',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xffB81736),
-                            ),
-                          )),
-                    ),
-                    // Add a dropdown to select role
-                    DropdownButton<String>(
-                      value: _selectedRole,
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          _selectedRole = newValue!;
-                        });
-                      },
-                      items: <String>['owner', 'manager', 'worker']
-                          .map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                    ),
-                    // Add a text field for farm name if role is owner or manager
-                    if (_selectedRole == 'owner' ||
-                        _selectedRole == 'manager') ...[
-                      TextField(
-                        controller: _farmNameController,
-                        decoration: const InputDecoration(
-                            suffixIcon: Icon(
-                              Icons.business,
-                              color: Colors.grey,
-                            ),
-                            label: Text(
-                              'Farm Name',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xffB81736),
-                              ),
-                            )),
+                        labelText: 'Confirm Password',
+                        labelStyle: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xffB81736),
+                        ),
+                        suffixIcon: Icon(Icons.lock, color: Colors.grey),
                       ),
-                    ] else ...[
-                      TextField(
-                        controller: _signUpCodeController,
-                        decoration: const InputDecoration(
-                            suffixIcon: Icon(
-                              Icons.code,
-                              color: Colors.grey,
-                            ),
-                            label: Text(
-                              'Sign-Up Code',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xffB81736),
-                              ),
-                            )),
+                    ),
+                    TextField(
+                      controller: _farmNameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Farm Name (Optional)',
+                        labelStyle: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xffB81736),
+                        ),
+                        suffixIcon: Icon(Icons.business, color: Colors.grey),
                       ),
-                    ],
-                    const SizedBox(
-                      height: 10,
                     ),
-                    const SizedBox(
-                      height: 70,
+                    TextField(
+                      controller: _farmCodeController,
+                      decoration: const InputDecoration(
+                        labelText: 'Farm Code (Optional)',
+                        labelStyle: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xffB81736),
+                        ),
+                        suffixIcon: Icon(Icons.code, color: Colors.grey),
+                      ),
                     ),
+                    const SizedBox(height: 20),
                     GestureDetector(
-                      onTap: _signup,
+                      onTap: _isLoading ? null : _signup,
                       child: Container(
                         height: 55,
-                        width: 300,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(30),
-                          gradient: const LinearGradient(colors: [
-                            Color(0xffB81736),
-                            Color(0xff281537),
-                          ]),
-                        ),
-                        child: const Center(
-                          child: Text(
-                            'SIGN UP',
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 20,
-                                color: Colors.white),
+                          gradient: const LinearGradient(
+                            colors: [Color(0xffB81736), Color(0xff281537)],
                           ),
+                        ),
+                        child: Center(
+                          child: _isLoading
+                              ? const CircularProgressIndicator(color: Colors.white)
+                              : const Text(
+                                  'SIGN UP',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  ),
+                                ),
                         ),
                       ),
                     ),
-                    const SizedBox(
-                      height: 80,
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          'Already have an account? ',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                        GestureDetector(
+                          onTap: () => Navigator.pushReplacementNamed(context, '/login'),
+                          child: const Text(
+                            'Login',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Color(0xffB81736),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    const Align(
-                      alignment: Alignment.bottomRight,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            "Don't have an account?",
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey),
-                          ),
-                          Text(
-                            "Sign up",
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 17,
-                                color: Colors.black),
-                          ),
-                        ],
-                      ),
-                    )
                   ],
                 ),
               ),

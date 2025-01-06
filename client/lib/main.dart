@@ -35,8 +35,11 @@ class CattleFarmApp extends StatelessWidget {
         '/login': (context) => const loginScreen(),
       },
       theme: ThemeData(
-        primarySwatch:
-            createMaterialColor(const Color.fromARGB(255, 145, 0, 150)),
+        primarySwatch: createMaterialColor(const Color(0xFF4CAF50)), // Natural green
+        colorScheme: ColorScheme.fromSwatch(
+          primarySwatch: createMaterialColor(const Color(0xFF4CAF50)), // Primary green
+          accentColor: const Color(0xFFFFC107), // Soft yellow
+        ),
         fontFamily: 'Roboto',
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
