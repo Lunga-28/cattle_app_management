@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'registration_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -185,15 +186,20 @@ class _loginScreenState extends State<loginScreen> {
                           ),
                         ),
                         GestureDetector(
-                          onTap: () {
-                            Navigator.pushNamed(context, '/signup');
-                          },
+                          onTap: () =>  {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const RegScreen(),
+                  ),
+                )
+              },
                           child: const Text(
-                            "Sign up",
+                            'Sign Up',
                             style: TextStyle(
+                              fontSize: 16,
+                              color: Color(0xffB81736),
                               fontWeight: FontWeight.bold,
-                              fontSize: 17,
-                              color: Color(0xFF4CAF50),
                             ),
                           ),
                         ),

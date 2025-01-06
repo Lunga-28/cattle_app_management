@@ -123,7 +123,8 @@ class _RegScreenState extends State<RegScreen> {
             width: double.infinity,
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xffB81736), Color(0xff281537)],
+                colors: [                              Color(0xFF4CAF50),
+                              Color(0xFF2E7D32),],
               ),
             ),
             child: const Padding(
@@ -231,7 +232,7 @@ class _RegScreenState extends State<RegScreen> {
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(30),
                           gradient: const LinearGradient(
-                            colors: [Color(0xffB81736), Color(0xff281537)],
+                            colors: [Color(0xFF2E7D32), Color(0xff281537)],
                           ),
                         ),
                         child: Center(

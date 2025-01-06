@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import '../widgets/dashboard_item.dart';
 
 class DashboardScreen extends StatefulWidget {
-  final String farmId; // Add farmId parameter
+ 
 
   const DashboardScreen(
-      {super.key, required this.farmId}); // Require farmId in constructor
+      {super.key}); // Require farmId in constructor
 
   @override
   _DashboardScreenState createState() => _DashboardScreenState();
@@ -18,7 +18,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     // Pass the farmId to DashboardScreenContent
     final List<Widget> pages = [
-      DashboardScreenContent(farmId: widget.farmId), // Home (Dashboard)
+      DashboardScreenContent(), // Home (Dashboard)
       ProfileScreen(), // Profile
     ];
 
@@ -31,7 +31,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Poultry Farm Management',
+          'Cattle Farm Management',
           style: TextStyle(
             color: Colors.white,
             fontSize: 22,
@@ -73,10 +73,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
 // Separate Widget for the Dashboard Content
 class DashboardScreenContent extends StatelessWidget {
-  final String farmId; // Add farmId parameter
+   // Add farmId parameter
 
   DashboardScreenContent(
-      {super.key, required this.farmId}); // Require farmId in constructor
+      {super.key}); // Require farmId in constructor
 
   final List<Map<String, dynamic>> dashboardItems = [
     {'title': 'Inventory', 'icon': Icons.inventory, 'route': '/inventory'},
@@ -111,7 +111,7 @@ class DashboardScreenContent extends StatelessWidget {
               title: dashboardItems[index]['title'],
               icon: dashboardItems[index]['icon'],
               route: dashboardItems[index]['route'],
-              farmId: farmId, // Pass farmId to DashboardItem
+              
             );
           },
         ),
