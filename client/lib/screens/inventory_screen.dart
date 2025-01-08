@@ -1,3 +1,4 @@
+import 'package:cattle_management_app/screens/add_cattle.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -25,7 +26,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
         Uri.parse('http://10.0.2.2:3000/api/cattle'),
         headers: {
           'Content-Type': 'application/json',
-          // TODO: Add your authentication token here
           'Authorization': 'cattle_mosaicbytes',
         },
       );
@@ -53,7 +53,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Cattle Inventory'),
-        backgroundColor: const Color(0xffB81736),
+        backgroundColor: const Color(0xFF2E7D32), // Consistent darker green
         elevation: 0,
       ),
       body: isLoading
@@ -66,7 +66,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Image.asset(
-                            'assets/empty_cattle.png', // Add your placeholder image
+                            'assets/empty_cattle.png', // Placeholder image
                             height: 120,
                             width: 120,
                           ),
@@ -76,6 +76,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
+                              color: Colors.grey,
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -101,7 +102,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                           ),
                           child: ListTile(
                             leading: CircleAvatar(
-                              backgroundColor: const Color(0xffB81736),
+                              backgroundColor: const Color(0xFF4CAF50),
                               child: Text(
                                 animal['tag_number']?.toString().substring(0, 1) ??
                                     '#',
@@ -161,9 +162,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
             ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // TODO: Navigate to add cattle screen
+Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddCattleScreen(),
+      ),
+    );
         },
-        backgroundColor: const Color(0xffB81736),
+        backgroundColor: const Color(0xFF4CAF50), // Consistent green
         child: const Icon(Icons.add),
       ),
     );
