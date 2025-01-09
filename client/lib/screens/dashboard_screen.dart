@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../widgets/dashboard_item.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -160,7 +159,7 @@ class DashboardScreenContent extends StatelessWidget {
       {
         'title': 'Financials',
         'icon': Icons.account_balance_outlined,
-        'route': '/financials',
+        'route': '/finances',
         'subtitle': 'Track expenses',
         'color': const Color(0xFF388E3C),
       },

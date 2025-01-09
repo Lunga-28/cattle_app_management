@@ -1,3 +1,4 @@
+import 'package:cattle_management_app/screens/finances_screen.dart';
 import 'package:cattle_management_app/screens/inventory_screen.dart';
 import 'package:flutter/material.dart';
 import 'welcome_screen.dart';
@@ -23,9 +24,9 @@ class CattleFarmApp extends StatelessWidget {
             builder: (context) => DashboardScreen(),
           );
         } else if (settings.name == '/finances') {
-          /*return MaterialPageRoute(
-            builder: (context) => FinancePage(),
-          );*/
+          return MaterialPageRoute(
+            builder: (context) => FinancesScreen(),
+          );
         } else if (settings.name == '/inventory') {
           return MaterialPageRoute(
             builder: (context) => InventoryScreen(),

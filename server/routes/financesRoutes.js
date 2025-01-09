@@ -1,26 +1,10 @@
 const express = require('express');
-const Finance = require('../models/finances.model');
+const financeController = require('../controller/finances.controller');
+const authenticate = require('../middleware/authenticate');
+
 const router = express.Router();
 
-// Add a finance entry
-router.post('/',  async (req, res) => {
-  try {
-    const finance = new Finance({ ...req.body, userId: req.user.id });
-    await finance.save();
-    res.status(201).json(finance);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to add finance record' });
-  }
-});
-
-// Get all finance records for the user
-router.get('/',  async (req, res) => {
-  try {
-    const finances = await Finance.find({ userId: req.user.id });
-    res.json(finances);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch finance records' });
-  }
-});
+router.post('/', authenticate, financeController.addFinance);
+router.get('/', authenticate, financeController.getFinances);
 
 module.exports = router;
