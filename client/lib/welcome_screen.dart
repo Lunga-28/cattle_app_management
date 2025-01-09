@@ -12,85 +12,153 @@ class WelcomeScreen extends StatelessWidget {
         height: double.infinity,
         width: double.infinity,
         decoration: const BoxDecoration(
-            gradient: LinearGradient(colors: [
-          Color(0xffB81736),
-          Color(0xff281537),
-        ])),
-        child: Column(children: [
-          const Padding(
-            padding: EdgeInsets.only(top: 200.0),
-            child: Image(image: AssetImage('assets/logo.png')),
+          gradient: LinearGradient(
+            colors: [
+              Color(0xFF4CAF50),
+              Color(0xFF2E7D32),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-          const SizedBox(
-            height: 100,
-          ),
-          const Text(
-            'Welcome Back',
-            style: TextStyle(fontSize: 30, color: Colors.white),
-          ),
-          const SizedBox(
-            height: 30,
-          ),
-          GestureDetector(
-            onTap: () {
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => const loginScreen()));
-            },
-            child: Container(
-              height: 53,
-              width: 320,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(30),
-                border: Border.all(color: Colors.white),
-              ),
-              child: const Center(
-                child: Text(
-                  'SIGN IN',
-                  style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white),
+        ),
+        child: SingleChildScrollView(
+          child: SafeArea(
+            child: Column(
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(top: 60.0),
+                  child: Image(
+                    image: AssetImage('assets/logo.png'),
+                    height: 120,
+                  ),
                 ),
+                const SizedBox(height: 40),
+                Container(
+                  padding: const EdgeInsets.all(30),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Text(
+                        'Welcome to\nFarm Management',
+                        style: TextStyle(
+                          fontSize: 36,
+                          height: 1.2,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 15),
+                      Text(
+                        'Manage your farm efficiently',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.white.withOpacity(0.8),
+                        ),
+                      ),
+                      const SizedBox(height: 50),
+                      _buildButton(
+                        context: context,
+                        title: 'SIGN IN',
+                        isOutlined: true,
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const LoginScreen(),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildButton(
+                        context: context,
+                        title: 'SIGN UP',
+                        isOutlined: false,
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const RegScreen(),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 50),
+                      _buildSocialButton(
+                        icon: Icons.g_mobiledata,
+                        text: 'Continue with Google',
+                      ),
+                      const SizedBox(height: 16),
+                      _buildSocialButton(
+                        icon: Icons.facebook,
+                        text: 'Continue with Facebook',
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 30),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildButton({
+    required BuildContext context,
+    required String title,
+    required bool isOutlined,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(30),
+        child: Container(
+          height: 56,
+          decoration: BoxDecoration(
+            color: isOutlined ? Colors.transparent : Colors.white,
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(
+              color: Colors.white,
+              width: 2,
+            ),
+          ),
+          child: Center(
+            child: Text(
+              title,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: isOutlined ? Colors.white : const Color(0xFF4CAF50),
+                letterSpacing: 1.5,
               ),
             ),
           ),
-          const SizedBox(
-            height: 30,
-          ),
-          GestureDetector(
-            onTap: () {
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => const RegScreen()));
-            },
-            child: Container(
-              height: 53,
-              width: 320,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(30),
-                border: Border.all(color: Colors.white),
-              ),
-              child: const Center(
-                child: Text(
-                  'SIGN UP',
-                  style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black),
-                ),
-              ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSocialButton({required IconData icon, required String text}) {
+    return Container(
+      height: 56,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: Colors.white, size: 24),
+          const SizedBox(width: 12),
+          Text(
+            text,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
             ),
           ),
-          const Spacer(),
-          const Text(
-            'Login with Google',
-            style: TextStyle(fontSize: 17, color: Colors.white),
-          ), //
-          const SizedBox(
-            height: 12,
-          ),
-          const Icon(Icons.facebook_outlined)
-        ]),
+        ],
       ),
     );
   }

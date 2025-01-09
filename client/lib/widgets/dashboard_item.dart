@@ -4,14 +4,14 @@ class DashboardItem extends StatelessWidget {
   final String title;
   final IconData icon;
   final String route;
-  final String farmId; // Add farmId parameter
+ 
 
   const DashboardItem({
     super.key,
     required this.title,
     required this.icon,
     required this.route,
-    required this.farmId, // Require farmId in constructor
+
   });
 
   @override
@@ -21,7 +21,6 @@ class DashboardItem extends StatelessWidget {
         Navigator.pushNamed(
           context,
           route,
-          arguments: farmId, // Pass farmId as argument
         );
       },
       child: Card(

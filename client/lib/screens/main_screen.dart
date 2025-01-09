@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'dashboard_screen.dart';
 
 class MainScreen extends StatefulWidget {
-  final String farmId;
+  
 
-  const MainScreen({super.key, required this.farmId});
+  const MainScreen({super.key});
 
   @override
   _MainScreenState createState() => _MainScreenState();
@@ -19,7 +19,7 @@ class _MainScreenState extends State<MainScreen> {
   void initState() {
     super.initState();
     _screens = [
-      DashboardScreen(farmId: widget.farmId),
+      DashboardScreen(),
       // Add other screens here, such as Messaging and Profile
     ];
   }

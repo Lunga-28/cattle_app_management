@@ -13,6 +13,7 @@ const cattleSchema = new mongoose.Schema({
       notes: { type: String },
     },
   ],
+  tag_number: { type: String, required: true},
 }, { timestamps: true });
 
 module.exports = mongoose.model('Cattle', cattleSchema);

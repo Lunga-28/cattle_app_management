@@ -1,3 +1,5 @@
+import 'package:cattle_management_app/screens/finances_screen.dart';
+import 'package:cattle_management_app/screens/inventory_screen.dart';
 import 'package:flutter/material.dart';
 import 'welcome_screen.dart';
 import 'screens/dashboard_screen.dart';
@@ -18,25 +20,32 @@ class CattleFarmApp extends StatelessWidget {
       initialRoute: '/',
       onGenerateRoute: (settings) {
         if (settings.name == '/dashboard') {
-          final String farmId = settings.arguments as String;
           return MaterialPageRoute(
-            builder: (context) => DashboardScreen(farmId: farmId),
+            builder: (context) => DashboardScreen(),
           );
         } else if (settings.name == '/finances') {
-          final String farmId = settings.arguments as String;
-          /*return MaterialPageRoute(
-            builder: (context) => FinancePage(farmId: farmId),
-          );*/
+          return MaterialPageRoute(
+            builder: (context) => FinancesScreen(),
+          );
+        } else if (settings.name == '/inventory') {
+          return MaterialPageRoute(
+            builder: (context) => InventoryScreen(),
+          );
         }
         return null;
       },
       routes: {
         '/': (context) => const WelcomeScreen(),
-        '/login': (context) => const loginScreen(),
+        '/login': (context) => const LoginScreen(),
       },
       theme: ThemeData(
         primarySwatch:
-            createMaterialColor(const Color.fromARGB(255, 145, 0, 150)),
+            createMaterialColor(const Color(0xFF4CAF50)), // Natural green
+        colorScheme: ColorScheme.fromSwatch(
+          primarySwatch:
+              createMaterialColor(const Color(0xFF4CAF50)), // Primary green
+          accentColor: const Color(0xFFFFC107), // Soft yellow
+        ),
         fontFamily: 'Roboto',
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
