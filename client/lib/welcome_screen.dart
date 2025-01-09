@@ -28,7 +28,7 @@ class WelcomeScreen extends StatelessWidget {
                 const Padding(
                   padding: EdgeInsets.only(top: 60.0),
                   child: Image(
-                    image: AssetImage('assets/logo.png'),
+                    image: AssetImage('assets/images/logo2.jpeg'),
                     height: 120,
                   ),
                 ),
