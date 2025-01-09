@@ -19,7 +19,6 @@ class CattleFarmApp extends StatelessWidget {
       initialRoute: '/',
       onGenerateRoute: (settings) {
         if (settings.name == '/dashboard') {
-          
           return MaterialPageRoute(
             builder: (context) => DashboardScreen(),
           );
@@ -27,23 +26,23 @@ class CattleFarmApp extends StatelessWidget {
           /*return MaterialPageRoute(
             builder: (context) => FinancePage(),
           );*/
-        }
-        else if (settings.name == '/inventory') {
-          
+        } else if (settings.name == '/inventory') {
           return MaterialPageRoute(
             builder: (context) => InventoryScreen(),
           );
-        } 
+        }
         return null;
       },
       routes: {
         '/': (context) => const WelcomeScreen(),
-        '/login': (context) => const loginScreen(),
+        '/login': (context) => const LoginScreen(),
       },
       theme: ThemeData(
-        primarySwatch: createMaterialColor(const Color(0xFF4CAF50)), // Natural green
+        primarySwatch:
+            createMaterialColor(const Color(0xFF4CAF50)), // Natural green
         colorScheme: ColorScheme.fromSwatch(
-          primarySwatch: createMaterialColor(const Color(0xFF4CAF50)), // Primary green
+          primarySwatch:
+              createMaterialColor(const Color(0xFF4CAF50)), // Primary green
           accentColor: const Color(0xFFFFC107), // Soft yellow
         ),
         fontFamily: 'Roboto',

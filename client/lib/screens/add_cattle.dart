@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -19,12 +20,30 @@ class _AddCattleScreenState extends State<AddCattleScreen> {
   String _selectedGender = 'Male';
   bool isLoading = false;
 
+  Future<String?> _getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('access_token');
+    print('Retrieved token: ${token?.substring(0, 10) ?? 'null'}...');
+    return token;
+  }
+
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() {
       isLoading = true;
     });
+
+    final token = await _getToken();
+    if (token == null) {
+      if (!mounted) return;
+      setState(() {
+        isLoading = false;
+      });
+      _showError('Not authenticated. Please sign in again.');
+      Navigator.of(context).pushReplacementNamed('/login');
+      return;
+    }
 
     final cattleData = {
       'name': _nameController.text,
@@ -35,6 +54,11 @@ class _AddCattleScreenState extends State<AddCattleScreen> {
     };
 
     try {
+      print('Sending request to add cattle...'); // Debug log
+      print(
+          'Token: ${token.substring(0, 10)}...'); // Show first 10 chars of token
+      print('Request data: $cattleData'); // Debug log
+
       final response = await http.post(
         Uri.parse('http://10.0.2.2:3000/api/cattle'),
         headers: {
@@ -44,15 +68,20 @@ class _AddCattleScreenState extends State<AddCattleScreen> {
         body: json.encode(cattleData),
       );
 
-      if (response.statusCode == 201) {
-        if (!mounted) return;
+      print('Response status code: ${response.statusCode}'); // Debug log
+      print('Response body: ${response.body}'); // Debug log
 
-        _nameController.clear();
-        _tagController.clear();
-        _breedController.clear();
-        _ageController.clear();
+      if (!mounted) {
+        print('Widget not mounted, returning early');
+        return;
+      }
+
+      if (response.statusCode == 201) {
+        // Clear form fields and reset gender
+        _formKey.currentState?.reset();
         setState(() {
           _selectedGender = 'Male';
+          isLoading = false;
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -61,41 +90,58 @@ class _AddCattleScreenState extends State<AddCattleScreen> {
             backgroundColor: Color(0xFF4CAF50),
           ),
         );
-        Navigator.pop(context, true); // Return true to indicate success
+        Navigator.pop(context, true);
       } else {
-        final errorData = json.decode(response.body);
-        throw Exception(errorData['error'] ?? 'Failed to add cattle');
-      }
-    } on SocketException {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Network error: Please check your internet connection.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    } finally {
-      if (mounted) {
         setState(() {
           isLoading = false;
         });
+
+        final errorData = json.decode(response.body);
+        if (response.statusCode == 401) {
+          _showError('Session expired. Please sign in again.');
+          Navigator.of(context).pushReplacementNamed('/login');
+        } else {
+          _showError(errorData['error'] ?? 'Failed to add cattle');
+        }
       }
+    } on SocketException catch (e) {
+      print('SocketException: $e'); // Debug log
+      setState(() {
+        isLoading = false;
+      });
+      _showError('Network error: Please check your internet connection.');
+    } catch (e) {
+      print('Unexpected error: $e'); // Debug log
+      setState(() {
+        isLoading = false;
+      });
+      _showError(e.toString());
     }
   }
 
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+
   Future<bool> _onWillPop() async {
+    final isFormDirty = _nameController.text.isNotEmpty ||
+        _tagController.text.isNotEmpty ||
+        _breedController.text.isNotEmpty ||
+        _ageController.text.isNotEmpty;
+
+    if (!isFormDirty) return true;
+
     return (await showDialog(
           context: context,
           builder: (context) => AlertDialog(
             title: const Text('Discard Changes?'),
-            content: const Text('You have unsaved changes. Do you want to leave?'),
+            content:
+                const Text('You have unsaved changes. Do you want to leave?'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
@@ -135,31 +181,20 @@ class _AddCattleScreenState extends State<AddCattleScreen> {
             key: _formKey,
             child: ListView(
               children: [
-                TextFormField(
+                _buildTextField(
                   controller: _nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Name',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.pets),
-                  ),
-                  textCapitalization: TextCapitalization.words,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter a name';
-                    }
-                    return null;
-                  },
+                  labelText: 'Name',
+                  icon: Icons.pets,
+                  validator: (value) =>
+                      value!.isEmpty ? 'Please enter a name' : null,
                 ),
                 const SizedBox(height: 16),
-                TextFormField(
+                _buildTextField(
                   controller: _tagController,
-                  decoration: const InputDecoration(
-                    labelText: 'Tag Number',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.tag),
-                  ),
+                  labelText: 'Tag Number',
+                  icon: Icons.tag,
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
+                    if (value!.isEmpty) {
                       return 'Please enter a tag number';
                     }
                     if (!RegExp(r'^[a-zA-Z0-9]+$').hasMatch(value)) {
@@ -169,67 +204,30 @@ class _AddCattleScreenState extends State<AddCattleScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                TextFormField(
+                _buildTextField(
                   controller: _breedController,
-                  decoration: const InputDecoration(
-                    labelText: 'Breed',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.category),
-                  ),
-                  textCapitalization: TextCapitalization.words,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter a breed';
-                    }
-                    return null;
-                  },
+                  labelText: 'Breed',
+                  icon: Icons.category,
+                  validator: (value) =>
+                      value!.isEmpty ? 'Please enter a breed' : null,
                 ),
                 const SizedBox(height: 16),
-                TextFormField(
+                _buildTextField(
                   controller: _ageController,
+                  labelText: 'Age (in years)',
+                  icon: Icons.calendar_today,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Age (in years)',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.calendar_today),
-                  ),
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter the age';
-                    }
-                    if (int.tryParse(value) == null) {
-                      return 'Please enter a valid number';
-                    }
-                    if (int.parse(value) < 0 || int.parse(value) > 50) {
-                      return 'Age must be between 0 and 50';
+                    if (value!.isEmpty) return 'Please enter the age';
+                    final age = int.tryParse(value);
+                    if (age == null || age < 0 || age > 50) {
+                      return 'Age must be a valid number between 0 and 50';
                     }
                     return null;
                   },
                 ),
                 const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  value: _selectedGender,
-                  decoration: const InputDecoration(
-                    labelText: 'Gender',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.people),
-                  ),
-                  items: const [
-                    DropdownMenuItem(value: 'Male', child: Text('Male')),
-                    DropdownMenuItem(value: 'Female', child: Text('Female')),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedGender = value!;
-                    });
-                  },
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please select a gender';
-                    }
-                    return null;
-                  },
-                ),
+                _buildDropdownField(),
                 const SizedBox(height: 24),
                 isLoading
                     ? const Center(child: CircularProgressIndicator())
@@ -244,7 +242,8 @@ class _AddCattleScreenState extends State<AddCattleScreen> {
                         ),
                         child: const Text(
                           'Add Cattle',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                       ),
               ],
@@ -252,6 +251,47 @@ class _AddCattleScreenState extends State<AddCattleScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String labelText,
+    required IconData icon,
+    TextInputType? keyboardType,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      decoration: InputDecoration(
+        labelText: labelText,
+        border: const OutlineInputBorder(),
+        prefixIcon: Icon(icon),
+      ),
+      textCapitalization: TextCapitalization.words,
+      validator: validator,
+    );
+  }
+
+  Widget _buildDropdownField() {
+    return DropdownButtonFormField<String>(
+      value: _selectedGender,
+      decoration: const InputDecoration(
+        labelText: 'Gender',
+        border: OutlineInputBorder(),
+        prefixIcon: Icon(Icons.people),
+      ),
+      items: const [
+        DropdownMenuItem(value: 'Male', child: Text('Male')),
+        DropdownMenuItem(value: 'Female', child: Text('Female')),
+      ],
+      onChanged: (value) {
+        setState(() {
+          _selectedGender = value!;
+        });
+      },
+      validator: (value) => value!.isEmpty ? 'Please select a gender' : null,
     );
   }
 }
