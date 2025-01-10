@@ -1,5 +1,6 @@
 import 'package:cattle_management_app/screens/finances_screen.dart';
 import 'package:cattle_management_app/screens/inventory_screen.dart';
+import 'package:cattle_management_app/screens/weather_screen.dart';
 import 'package:flutter/material.dart';
 import 'welcome_screen.dart';
 import 'screens/dashboard_screen.dart';
@@ -30,6 +31,10 @@ class CattleFarmApp extends StatelessWidget {
         } else if (settings.name == '/inventory') {
           return MaterialPageRoute(
             builder: (context) => InventoryScreen(),
+          );
+        } else if (settings.name == '/weather') {
+          return MaterialPageRoute(
+            builder: (context) => WeatherScreen(),
           );
         }
         return null;

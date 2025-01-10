@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'dashboard_screen.dart';
 
 class MainScreen extends StatefulWidget {
-  
-
   const MainScreen({super.key});
 
   @override
@@ -20,7 +18,6 @@ class _MainScreenState extends State<MainScreen> {
     super.initState();
     _screens = [
       DashboardScreen(),
-      // Add other screens here, such as Messaging and Profile
     ];
   }
 
@@ -40,7 +37,6 @@ class _MainScreenState extends State<MainScreen> {
             icon: Icon(Icons.dashboard),
             label: 'Home',
           ),
-
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
             label: 'Profile',

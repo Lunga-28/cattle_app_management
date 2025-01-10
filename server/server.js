@@ -6,7 +6,7 @@ const userRouter = require('./routes/userRoutes');
 const authRouter = require('./routes/authRoutes');
 const financeRouter = require('./routes/financesRoutes');
 const cattleRouter = require('./routes/cattleRoutes');
-const weatherRouter = require('./routes/weatherRoutes');
+const weatherRouters = require('./routes/weatherRoutes');
 
 require('dotenv').config();
 app.use(express.json());
@@ -25,7 +25,7 @@ app.use('/api/user', userRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/finances', financeRouter);
 app.use('/api/cattle', cattleRouter);
-app.use('/api/weather', weatherRouter);
+app.use('/api/weather', weatherRouters);
 
 
 const port = process.env.PORT || 3000;
