@@ -25,7 +25,8 @@ class _WeatherScreenState extends State<WeatherScreen> {
     try {
       // Updated URL to include the city query parameter
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:3000/api/weather?city=${Uri.encodeComponent(city)}'),
+        Uri.parse(
+            'http://10.0.2.2:3000/api/weather?city=${Uri.encodeComponent(city)}'),
       );
 
       if (response.statusCode == 200) {
@@ -85,7 +86,8 @@ class _WeatherScreenState extends State<WeatherScreen> {
                       : _weatherData != null
                           ? _buildWeatherContent()
                           : const Center(
-                              child: Text('Enter a city to see weather forecast'),
+                              child:
+                                  Text('Enter a city to see weather forecast'),
                             ),
             ),
           ],
@@ -128,7 +130,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: const Text('Search'),
+            child: const Text('Search', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -138,7 +140,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
   Widget _buildWeatherContent() {
     final forecast = _weatherData!['forecast'] as List;
     final today = DateTime.now().day;
-    
+
     // Separate today's hourly forecast
     final todayHourly = forecast.where((item) {
       final date = DateTime.parse(item['date']);
@@ -146,17 +148,21 @@ class _WeatherScreenState extends State<WeatherScreen> {
     }).toList();
 
     // Group remaining forecast by day
-    final dailyForecasts = forecast.where((item) {
-      final date = DateTime.parse(item['date']);
-      return date.day != today;
-    }).fold<Map<String, dynamic>>({}, (map, item) {
-      final date = DateTime.parse(item['date']);
-      final dateStr = DateFormat('yyyy-MM-dd').format(date);
-      if (!map.containsKey(dateStr)) {
-        map[dateStr] = item;
-      }
-      return map;
-    }).values.toList();
+    final dailyForecasts = forecast
+        .where((item) {
+          final date = DateTime.parse(item['date']);
+          return date.day != today;
+        })
+        .fold<Map<String, dynamic>>({}, (map, item) {
+          final date = DateTime.parse(item['date']);
+          final dateStr = DateFormat('yyyy-MM-dd').format(date);
+          if (!map.containsKey(dateStr)) {
+            map[dateStr] = item;
+          }
+          return map;
+        })
+        .values
+        .toList();
 
     return SingleChildScrollView(
       child: Padding(
