@@ -21,6 +21,7 @@ mongoose.connect(process.env.MONGO, {
 }).then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
 
+  
 // Set up routes
 app.use('/api/user', userRouter);
 app.use('/api/auth', authRouter);

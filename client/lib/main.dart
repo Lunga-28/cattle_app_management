@@ -6,6 +6,7 @@ import 'welcome_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'login_screen.dart';
 import 'colors.dart';
+import 'screens/health_screen.dart';
 
 void main() {
   runApp(CattleFarmApp());
@@ -35,6 +36,10 @@ class CattleFarmApp extends StatelessWidget {
         } else if (settings.name == '/weather') {
           return MaterialPageRoute(
             builder: (context) => WeatherScreen(),
+          );
+        } else if (settings.name == '/health') {
+          return MaterialPageRoute(
+            builder: (context) => HealthScreen(),
           );
         }
         return null;
