@@ -8,6 +8,7 @@ const financeRouter = require('./routes/financesRoutes');
 const cattleRouter = require('./routes/cattleRoutes');
 const weatherRouters = require('./routes/weatherRoutes');
 const healthRouter = require('./routes/healthRoutes');
+const feedRouter = require('./routes/healthRoutes');
 
 require('dotenv').config();
 app.use(express.json());
@@ -29,6 +30,7 @@ app.use('/api/finances', financeRouter);
 app.use('/api/cattle', cattleRouter);
 app.use('/api/weather', weatherRouters);
 app.use('/api/health', healthRouter);
+app.use('/api/feed', feedRouter);
 
 
 const port = process.env.PORT || 3000;
