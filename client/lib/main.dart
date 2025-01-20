@@ -1,3 +1,4 @@
+import 'package:cattle_management_app/screens/feed_screen.dart';
 import 'package:cattle_management_app/screens/finances_screen.dart';
 import 'package:cattle_management_app/screens/inventory_screen.dart';
 import 'package:cattle_management_app/screens/weather_screen.dart';
@@ -41,7 +42,12 @@ class CattleFarmApp extends StatelessWidget {
           return MaterialPageRoute(
             builder: (context) => HealthScreen(),
           );
+        }else if (settings.name == '/feed') {
+          return MaterialPageRoute(
+            builder: (context) => FeedScreen(),
+          );
         }
+
         return null;
       },
       routes: {

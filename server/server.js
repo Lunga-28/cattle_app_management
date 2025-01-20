@@ -30,7 +30,7 @@ app.use('/api/finances', financeRouter);
 app.use('/api/cattle', cattleRouter);
 app.use('/api/weather', weatherRouters);
 app.use('/api/health', healthRouter);
-app.use('/api/feed', feedRouter);
+app.use('/api/feeds', feedRouter);
 
 
 const port = process.env.PORT || 3000;
