@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'adjust_feedstock.dart';
-import 'feed_detail_screen.dart';
+import 'feed_details_screen.dart';
 import 'edit_feed_screen.dart';
 
 class FeedScreen extends StatefulWidget {
@@ -160,9 +160,8 @@ class _FeedScreenState extends State<FeedScreen> {
                 ? const Center(child: CircularProgressIndicator())
                 : RefreshIndicator(
                     onRefresh: fetchFeeds,
-                    child: feeds.isEmpty
-                        ? _buildEmptyState()
-                        : _buildFeedList(),
+                    child:
+                        feeds.isEmpty ? _buildEmptyState() : _buildFeedList(),
                   ),
           ),
         ],
@@ -252,16 +251,19 @@ class _FeedScreenState extends State<FeedScreen> {
       itemCount: feeds.length,
       itemBuilder: (context, index) {
         final feed = feeds[index];
-        final isLowStock = feed['quantity'] <= feed['stockAlert'];
+        // Add null safety checks for quantity and stockAlert
+        final quantity = feed['quantity']?.toDouble() ?? 0.0;
+        final stockAlert = feed['stockAlert']?.toDouble() ?? 0.0;
+        final isLowStock = quantity <= stockAlert;
 
         return Card(
           elevation: 2,
           margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
           child: ListTile(
             leading: CircleAvatar(
-              backgroundColor: _getTypeColor(feed['type']),
+              backgroundColor: _getTypeColor(feed['type'] ?? 'Other'),
               child: Icon(
-                _getTypeIcon(feed['type']),
+                _getTypeIcon(feed['type'] ?? 'Other'),
                 color: Colors.white,
               ),
             ),
@@ -269,7 +271,7 @@ class _FeedScreenState extends State<FeedScreen> {
               children: [
                 Expanded(
                   child: Text(
-                    feed['name'],
+                    feed['name'] ?? 'Unnamed Feed',
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -284,119 +286,107 @@ class _FeedScreenState extends State<FeedScreen> {
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('${feed['quantity']} ${feed['unit']}'),
-                Text('\$${feed['cost'].toStringAsFixed(2)} per ${feed['unit']}'),
+                Text(
+                    '${quantity.toStringAsFixed(2)} ${feed['unit'] ?? 'units'}'),
+                Text(
+                    '\$${(feed['cost']?.toDouble() ?? 0.0).toStringAsFixed(2)} per ${feed['unit'] ?? 'unit'}'),
               ],
             ),
-            trailing: PopupMenuButton(
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: 'view',
-                  child: Row(
-                    children: [
-                      Icon(Icons.visibility),
-                      SizedBox(width: 8),
-                      Text('View Details'),
-                    ],
-                  ),
-                ),
-                const PopupMenuItem(
-                  value: 'adjust',
-                  child: Row(
-                    children: [
-                      Icon(Icons.edit),
-                      SizedBox(width: 8),
-                      Text('Adjust Stock'),
-                    ],
-                  ),
-                ),
-                const PopupMenuItem(
-                  value: 'edit',
-                  child: Row(
-                    children: [
-                      Icon(Icons.settings),
-                      SizedBox(width: 8),
-                      Text('Edit'),
-                    ],
-                  ),
-                ),
-                const PopupMenuItem(
-                  value: 'delete',
-                  child: Row(
-                    children: [
-                      Icon(Icons.delete, color: Colors.red),
-                      SizedBox(width: 8),
-                      Text('Delete'),
-                    ],
-                  ),
-                ),
-              ],
-              onSelected: (value) async {
-                switch (value) {
-                  case 'view':
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            FeedDetailsScreen(feed: feed),
-                      ),
+            trailing: IconButton(
+              icon: const Icon(Icons.more_vert),
+              onPressed: () {
+                showModalBottomSheet(
+                  context: context,
+                  builder: (context) {
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ListTile(
+                          leading: const Icon(Icons.edit),
+                          title: const Text('Edit'),
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    EditFeedScreen(feed: feed),
+                              ),
+                            ).then((value) {
+                              if (value == true) {
+                                fetchFeeds();
+                              }
+                            });
+                          },
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.inventory),
+                          title: const Text('Adjust Stock'),
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    AdjustFeedStockScreen(feed: feed),
+                              ),
+                            ).then((value) {
+                              if (value == true) {
+                                fetchFeeds();
+                              }
+                            });
+                          },
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.delete),
+                          title: const Text('Delete'),
+                          onTap: () {
+                            Navigator.pop(context);
+                            showDialog(
+                              context: context,
+                              builder: (context) {
+                                return AlertDialog(
+                                  title: const Text('Delete Feed'),
+                                  content: const Text(
+                                      'Are you sure you want to delete this feed?'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.pop(context);
+                                      },
+                                      child: const Text('Cancel'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.pop(context);
+                                        deleteFeed(feed['_id']);
+                                      },
+                                      child: const Text('Delete'),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      ],
                     );
-                    break;
-                  case 'adjust':
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            AdjustFeedStockScreen(feed: feed),
-                      ),
-                    ).then((value) {
-                      if (value == true) {
-                        fetchFeeds();
-                      }
-                    });
-                    break;
-                  case 'edit':
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            EditFeedScreen(feed: feed),
-                      ),
-                    ).then((value) {
-                      if (value == true) {
-                        fetchFeeds();
-                      }
-                    });
-                    break;
-                  case 'delete':
-                    final confirmed = await showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('Confirm Delete'),
-                        content: const Text(
-                            'Are you sure you want to delete this feed item?'),
-                        actions: [
-                          TextButton(
-                            onPressed: () =>
-                                Navigator.pop(context, false),
-                            child: const Text('Cancel'),
-                          ),
-                          TextButton(
-                            onPressed: () =>
-                                Navigator.pop(context, true),
-                            child: const Text('Delete'),
-                          ),
-                        ],
-                      ),
-                    );
-
-                    if (confirmed == true) {
-                      deleteFeed(feed['_id']);
-                    }
-                    break;
-                }
+                  },
+                );
               },
             ),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => FeedDetailsScreen(feed: feed),
+                ),
+              ).then((value) {
+                if (value == true) {
+                  fetchFeeds();
+                }
+              });
+            },
           ),
         );
       },

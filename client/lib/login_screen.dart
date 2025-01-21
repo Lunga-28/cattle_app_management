@@ -71,6 +71,7 @@ class _LoginScreenState extends State<LoginScreen>
         final responseData = json.decode(response.body);
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('access_token', responseData['access_token']);
+        await prefs.setString('username', responseData['username']);
 
         if (!mounted) return;
         _showSnackBar('Login successful');
@@ -303,10 +304,10 @@ class _LoginScreenState extends State<LoginScreen>
           : const Text(
               'SIGN IN',
               style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.5,
-              ),
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.5,
+                  color: Colors.white),
             ),
     );
   }

@@ -61,7 +61,9 @@ exports.getLowStockFeeds = async (req, res) => {
     try {
         const lowStockFeeds = await Feed.find({
             createdBy: req.user.id,
-            quantity: { $lte: { $ref: 'stockAlert' } }
+            $expr: {
+                $lte: ['$quantity', '$stockAlert']
+            }
         });
 
         res.json(lowStockFeeds);

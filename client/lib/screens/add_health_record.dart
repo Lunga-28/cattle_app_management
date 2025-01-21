@@ -15,6 +15,7 @@ class _AddHealthRecordScreenState extends State<AddHealthRecordScreen> {
   final _formKey = GlobalKey<FormState>();
   List<dynamic> cattleList = [];
   bool isLoading = true;
+  bool isSubmitting = false;
 
   // Form fields
   String? selectedCattleId;
@@ -39,6 +40,14 @@ class _AddHealthRecordScreenState extends State<AddHealthRecordScreen> {
     fetchCattleList();
   }
 
+  @override
+  void dispose() {
+    descriptionController.dispose();
+    veterinarianController.dispose();
+    costController.dispose();
+    super.dispose();
+  }
+
   Future<void> fetchCattleList() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -57,23 +66,75 @@ class _AddHealthRecordScreenState extends State<AddHealthRecordScreen> {
         },
       );
 
+      if (!mounted) return;
+
       if (response.statusCode == 200) {
         setState(() {
           cattleList = json.decode(response.body);
           isLoading = false;
         });
+      } else if (response.statusCode == 401) {
+        await prefs.remove('access_token');
+        Navigator.of(context).pushReplacementNamed('/login');
       } else {
         throw Exception('Failed to load cattle');
       }
     } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        isLoading = false;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: ${e.toString()}')),
       );
     }
   }
 
+  Future<void> _addFinanceRecord(double cost, String cattleName) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('access_token');
+
+      if (token == null) {
+        if (!mounted) return;
+        Navigator.of(context).pushReplacementNamed('/login');
+        return;
+      }
+
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:3000/api/finances'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode({
+          'type': 'Expense',
+          'amount': cost,
+          'description':
+              'Health expense for ${cattleName} - ${selectedType} (${descriptionController.text})',
+          'date': DateTime.now().toIso8601String(),
+          'category': 'Health',
+        }),
+      );
+
+      if (response.statusCode != 201) {
+        throw Exception('Failed to add finance record');
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error adding finance record: ${e.toString()}')),
+      );
+      rethrow; // Rethrow to handle in the calling function
+    }
+  }
+
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      isSubmitting = true;
+    });
 
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -84,6 +145,14 @@ class _AddHealthRecordScreenState extends State<AddHealthRecordScreen> {
         return;
       }
 
+      // Get the selected cattle's name
+      final selectedCattle = cattleList.firstWhere(
+        (cattle) => cattle['_id'] == selectedCattleId,
+        orElse: () => {'name': 'Unknown Cattle'},
+      );
+      final cattleName = selectedCattle['name'];
+
+      // Add health record
       final response = await http.post(
         Uri.parse('http://10.0.2.2:3000/api/health'),
         headers: {
@@ -101,19 +170,41 @@ class _AddHealthRecordScreenState extends State<AddHealthRecordScreen> {
         }),
       );
 
+      if (!mounted) return;
+
       if (response.statusCode == 201) {
-        if (!mounted) return;
-        Navigator.pop(context, true);
+        // Add corresponding finance record
+        final cost = double.tryParse(costController.text) ?? 0;
+        await _addFinanceRecord(cost, cattleName);
+
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Health record added successfully')),
+          const SnackBar(
+            content:
+                Text('Health record and finance record added successfully'),
+            backgroundColor: Colors.green,
+          ),
         );
+        Navigator.pop(context, true);
+      } else if (response.statusCode == 401) {
+        await prefs.remove('access_token');
+        Navigator.of(context).pushReplacementNamed('/login');
       } else {
         throw Exception('Failed to add health record');
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${e.toString()}')),
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
       );
+    } finally {
+      if (mounted) {
+        setState(() {
+          isSubmitting = false;
+        });
+      }
     }
   }
 
@@ -147,6 +238,7 @@ class _AddHealthRecordScreenState extends State<AddHealthRecordScreen> {
                       value: selectedCattleId,
                       decoration: const InputDecoration(
                         labelText: 'Select Cattle',
+                        border: OutlineInputBorder(),
                       ),
                       items: cattleList.map<DropdownMenuItem<String>>((cattle) {
                         return DropdownMenuItem<String>(
@@ -171,6 +263,7 @@ class _AddHealthRecordScreenState extends State<AddHealthRecordScreen> {
                       value: selectedType,
                       decoration: const InputDecoration(
                         labelText: 'Type',
+                        border: OutlineInputBorder(),
                       ),
                       items: healthTypes.map<DropdownMenuItem<String>>((type) {
                         return DropdownMenuItem<String>(
@@ -195,6 +288,7 @@ class _AddHealthRecordScreenState extends State<AddHealthRecordScreen> {
                       controller: descriptionController,
                       decoration: const InputDecoration(
                         labelText: 'Description',
+                        border: OutlineInputBorder(),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -208,6 +302,7 @@ class _AddHealthRecordScreenState extends State<AddHealthRecordScreen> {
                       controller: veterinarianController,
                       decoration: const InputDecoration(
                         labelText: 'Veterinarian',
+                        border: OutlineInputBorder(),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -221,124 +316,188 @@ class _AddHealthRecordScreenState extends State<AddHealthRecordScreen> {
                       controller: costController,
                       decoration: const InputDecoration(
                         labelText: 'Cost',
+                        border: OutlineInputBorder(),
+                        prefixText: '\$ ',
                       ),
                       keyboardType: TextInputType.number,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter a cost';
                         }
+                        if (double.tryParse(value) == null) {
+                          return 'Please enter a valid number';
+                        }
                         return null;
                       },
                     ),
                     const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Text(
-                          'Next Checkup Date: ',
-                          style: TextStyle(
-                            color: Theme.of(context).primaryColor,
-                          ),
-                        ),
-                        Text(
-                          nextCheckupDate == null
-                              ? 'Not set'
-                              : DateFormat.yMMMd().format(nextCheckupDate!),
-                        ),
-                        const Spacer(),
-                        TextButton(
-                          onPressed: () async {
-                            final date = await showDatePicker(
-                              context: context,
-                              initialDate: DateTime.now(),
-                              firstDate: DateTime.now(),
-                              lastDate: DateTime(2100),
-                            );
-
-                            if (date != null) {
-                              setState(() {
-                                nextCheckupDate = date;
-                              });
-                            }
-                          },
-                          child: const Text('Set Date'),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Medicines',
-                      style: TextStyle(
-                        color: Theme.of(context).primaryColor,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: medicines.length,
-                      itemBuilder: (context, index) {
-                        final medicine = medicines[index];
-                        return Column(
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            Text(
+                              'Next Checkup Date',
+                              style: TextStyle(
+                                color: Theme.of(context).primaryColor,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
                             Row(
                               children: [
-                                Expanded(
-                                  child: TextFormField(
-                                    decoration: const InputDecoration(
-                                      labelText: 'Name',
-                                    ),
-                                    onChanged: (value) {
+                                Text(
+                                  nextCheckupDate == null
+                                      ? 'Not set'
+                                      : DateFormat.yMMMd()
+                                          .format(nextCheckupDate!),
+                                ),
+                                const Spacer(),
+                                TextButton.icon(
+                                  onPressed: () async {
+                                    final date = await showDatePicker(
+                                      context: context,
+                                      initialDate: DateTime.now(),
+                                      firstDate: DateTime.now(),
+                                      lastDate: DateTime(2100),
+                                    );
+
+                                    if (date != null) {
                                       setState(() {
-                                        medicine['name'] = value;
+                                        nextCheckupDate = date;
                                       });
-                                    },
+                                    }
+                                  },
+                                  icon: const Icon(Icons.calendar_today),
+                                  label: const Text('Set Date'),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Medicines',
+                                  style: TextStyle(
+                                    color: Theme.of(context).primaryColor,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: TextFormField(
-                                    decoration: const InputDecoration(
-                                      labelText: 'Dosage',
-                                    ),
-                                    onChanged: (value) {
-                                      setState(() {
-                                        medicine['dosage'] = value;
-                                      });
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: TextFormField(
-                                    decoration: const InputDecoration(
-                                      labelText: 'Duration',
-                                    ),
-                                    onChanged: (value) {
-                                      setState(() {
-                                        medicine['duration'] = value;
-                                      });
-                                    },
-                                  ),
+                                TextButton.icon(
+                                  onPressed: _addMedicine,
+                                  icon: const Icon(Icons.add),
+                                  label: const Text('Add Medicine'),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 8),
+                            ListView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: medicines.length,
+                              itemBuilder: (context, index) {
+                                final medicine = medicines[index];
+                                return Card(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Column(
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              'Medicine ${index + 1}',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            IconButton(
+                                              icon: const Icon(Icons.delete,
+                                                  color: Colors.red),
+                                              onPressed: () {
+                                                setState(() {
+                                                  medicines.removeAt(index);
+                                                });
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 8),
+                                        TextFormField(
+                                          decoration: const InputDecoration(
+                                            labelText: 'Name',
+                                            border: OutlineInputBorder(),
+                                          ),
+                                          initialValue: medicine['name'],
+                                          onChanged: (value) {
+                                            setState(() {
+                                              medicine['name'] = value;
+                                            });
+                                          },
+                                        ),
+                                        const SizedBox(height: 8),
+                                        TextFormField(
+                                          decoration: const InputDecoration(
+                                            labelText: 'Dosage',
+                                            border: OutlineInputBorder(),
+                                          ),
+                                          initialValue: medicine['dosage'],
+                                          onChanged: (value) {
+                                            setState(() {
+                                              medicine['dosage'] = value;
+                                            });
+                                          },
+                                        ),
+                                        const SizedBox(height: 8),
+                                        TextFormField(
+                                          decoration: const InputDecoration(
+                                            labelText: 'Duration',
+                                            border: OutlineInputBorder(),
+                                          ),
+                                          initialValue: medicine['duration'],
+                                          onChanged: (value) {
+                                            setState(() {
+                                              medicine['duration'] = value;
+                                            });
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
                           ],
-                        );
-                      },
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 16),
                     ElevatedButton(
-                      onPressed: () {
-                        _addMedicine();
-                      },
-                      child: const Text('Add Medicine'),
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: _submitForm,
-                      child: const Text('Add Health Record'),
+                      onPressed: isSubmitting ? null : _submitForm,
+                      child: isSubmitting
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                valueColor:
+                                    AlwaysStoppedAnimation(Colors.white),
+                              ),
+                            )
+                          : const Text('Submit'),
                     ),
                   ],
                 ),

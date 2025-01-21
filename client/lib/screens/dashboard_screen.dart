@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'profile_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -9,12 +11,27 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   int _selectedIndex = 0;
+  String _username = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUsername();
+  }
+
+  Future<void> _loadUsername() async {
+    final prefs = await SharedPreferences.getInstance();
+    final username = prefs.getString('username') ?? 'User';
+    setState(() {
+      _username = username;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final List<Widget> pages = [
       const DashboardScreenContent(),
-      const ProfileScreen(),
+      ProfileScreen(),
     ];
 
     return Scaffold(
@@ -43,8 +60,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ],
       ),
-// ... (previous code remains the same until the BottomNavigationBar)
-
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -81,52 +96,50 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-// ... (rest of the code remains the same)),
-}
-
-Widget _buildHeader() {
-  return Container(
-    padding: const EdgeInsets.all(20),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'Farm Dashboard',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 0.5,
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Farm Dashboard',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                ),
               ),
-            ),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.all(8),
+                child: const Icon(
+                  Icons.notifications_none,
+                  color: Colors.white,
+                  size: 24,
+                ),
               ),
-              padding: const EdgeInsets.all(8),
-              child: const Icon(
-                Icons.notifications_none,
-                color: Colors.white,
-                size: 24,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Welcome back, Farmer',
-          style: TextStyle(
-            color: Colors.white.withOpacity(0.8),
-            fontSize: 16,
+            ],
           ),
-        ),
-      ],
-    ),
-  );
+          const SizedBox(height: 8),
+          Text(
+            'Welcome back, $_username',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.8),
+              fontSize: 16,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class DashboardScreenContent extends StatelessWidget {
@@ -270,29 +283,6 @@ class DashboardScreenContent extends StatelessWidget {
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(30),
-          topRight: Radius.circular(30),
-        ),
-      ),
-      child: const Center(
-        child: Text(
-          'Profile Screen',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
       ),
     );

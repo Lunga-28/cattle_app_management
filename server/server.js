@@ -8,7 +8,7 @@ const financeRouter = require('./routes/financesRoutes');
 const cattleRouter = require('./routes/cattleRoutes');
 const weatherRouters = require('./routes/weatherRoutes');
 const healthRouter = require('./routes/healthRoutes');
-const feedRouter = require('./routes/healthRoutes');
+const feedRouter = require('./routes/feedRoutes'); // fixed this line
 
 require('dotenv').config();
 app.use(express.json());
@@ -22,7 +22,6 @@ mongoose.connect(process.env.MONGO, {
 }).then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
 
-  
 // Set up routes
 app.use('/api/user', userRouter);
 app.use('/api/auth', authRouter);
@@ -30,7 +29,7 @@ app.use('/api/finances', financeRouter);
 app.use('/api/cattle', cattleRouter);
 app.use('/api/weather', weatherRouters);
 app.use('/api/health', healthRouter);
-app.use('/api/feeds', feedRouter);
+app.use('/api/feed', feedRouter);
 
 
 const port = process.env.PORT || 3000;
