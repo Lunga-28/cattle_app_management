@@ -86,11 +86,16 @@ A comprehensive farm management solution built with Node.js/Express backend and 
    ```
 3. Create a `.env` file with the following variables:
    ```
-    OPENWEATHER_API_KEY="yourkey"
+OPENWEATHER_API_KEY="yourkey"
+
 MONGO = "Mongodbkey"
+
 JWT_SECRET = "jwtsecret"
+
 JWT_EXPIRES_IN=1h
+
 PORT=3000
+
    ```
 4. Start the server:
    ```bash
