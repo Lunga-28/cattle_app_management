@@ -19,6 +19,7 @@ const corsOptions = {
     'http://localhost',
     'http://10.0.2.2:3000',    // Android emulator
     'http://localhost:50000',   // Flutter web debug port
+    'http://localhost:54098',  // Flutter web release port
     'http://localhost:50001'    // Alternative Flutter web port
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
