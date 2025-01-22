@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'add_health_record.dart';
 import 'edit_health_record.dart';
 import 'health_record_details.dart';
+import 'package:cattle_management_app/config/api_config.dart';
 
 class HealthScreen extends StatefulWidget {
   const HealthScreen({super.key});
@@ -45,7 +46,7 @@ class _HealthScreenState extends State<HealthScreen> {
         return;
       }
 
-      String url = 'http://10.0.2.2:3000/api/health?sort=$sortOrder';
+      String url = '${ApiConfig.healthRecords}?sort=$sortOrder';
       if (selectedType != null) {
         url += '&type=$selectedType';
       }

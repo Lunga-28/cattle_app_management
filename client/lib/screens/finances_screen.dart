@@ -1,3 +1,4 @@
+import 'package:cattle_management_app/config/api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
@@ -35,7 +36,7 @@ class _FinancesScreenState extends State<FinancesScreen> {
       }
 
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:3000/api/finances'),
+        Uri.parse(ApiConfig.finances),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -80,7 +81,7 @@ class _FinancesScreenState extends State<FinancesScreen> {
       }
 
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:3000/api/finances'),
+        Uri.parse(ApiConfig.finances),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',

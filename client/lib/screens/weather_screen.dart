@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
+import 'package:cattle_management_app/config/api_config.dart';
 
 class WeatherScreen extends StatefulWidget {
   const WeatherScreen({super.key});
@@ -24,8 +25,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
 
     try {
       final response = await http.get(
-        Uri.parse(
-            'http://10.0.2.2:3000/api/weather?city=${Uri.encodeComponent(city)}'),
+        Uri.parse('${ApiConfig.weather}?city=${Uri.encodeComponent(city)}'),
       );
 
       if (response.statusCode == 200) {

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
+import 'package:cattle_management_app/config/api_config.dart';
 
 class EditFeedScreen extends StatefulWidget {
   final Map<String, dynamic> feed;
@@ -70,7 +71,7 @@ class _EditFeedScreenState extends State<EditFeedScreen> {
       }
 
       final response = await http.put(
-        Uri.parse('http://10.0.2.2:3000/api/feed/${widget.feed['_id']}'),
+        Uri.parse(ApiConfig.feedById(widget.feed['_id'])),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',

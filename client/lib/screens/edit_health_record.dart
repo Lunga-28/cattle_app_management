@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
+import 'package:cattle_management_app/config/api_config.dart';
 
 class EditHealthRecordScreen extends StatefulWidget {
   final Map<String, dynamic> record;
@@ -65,7 +66,7 @@ class _EditHealthRecordScreenState extends State<EditHealthRecordScreen> {
       }
 
       final response = await http.put(
-        Uri.parse('http://10.0.2.2:3000/api/health/${widget.record['_id']}'),
+        Uri.parse(ApiConfig.healthRecordById(widget.record['_id'])),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',

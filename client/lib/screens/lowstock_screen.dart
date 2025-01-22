@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cattle_management_app/config/api_config.dart';
 
 class LowStockFeedsScreen extends StatefulWidget {
   const LowStockFeedsScreen({super.key});
@@ -33,7 +34,7 @@ class _LowStockFeedsScreenState extends State<LowStockFeedsScreen> {
       }
 
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:3000/api/feed/low-stock'),
+       Uri.parse(ApiConfig.lowStockFeeds),
         headers: {
           'Authorization': 'Bearer $token',
         },

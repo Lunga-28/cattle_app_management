@@ -1,3 +1,4 @@
+import 'package:cattle_management_app/config/api_config.dart';
 import 'package:cattle_management_app/screens/add_feed_screen.dart';
 import 'package:cattle_management_app/screens/lowstock_screen.dart';
 import 'package:flutter/material.dart';
@@ -46,7 +47,7 @@ class _FeedScreenState extends State<FeedScreen> {
         return;
       }
 
-      String url = 'http://10.0.2.2:3000/api/feed?sort=$sortOrder';
+      String url = '${ApiConfig.feeds}?sort=$sortOrder';
       if (selectedType != null) {
         url += '&type=$selectedType';
       }

@@ -1,3 +1,4 @@
+import 'package:cattle_management_app/config/api_config.dart';
 import 'package:cattle_management_app/screens/add_cattle.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
@@ -35,7 +36,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
       }
 
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:3000/api/cattle'),
+        Uri.parse(ApiConfig.cattle),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -78,7 +79,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
       }
 
       final response = await http.delete(
-        Uri.parse('http://10.0.2.2:3000/api/cattle/$id'),
+        Uri.parse(ApiConfig.cattleById(id)),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
