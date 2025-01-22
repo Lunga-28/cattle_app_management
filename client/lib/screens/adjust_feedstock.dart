@@ -1,3 +1,4 @@
+import 'package:cattle_management_app/config/api_config.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -39,7 +40,7 @@ class _AdjustFeedStockScreenState extends State<AdjustFeedStockScreen> {
       }
 
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:3000/api/feed/${widget.feed['_id']}/adjust-stock'),
+        Uri.parse(ApiConfig.adjustFeedStock(widget.feed['_id'])),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',

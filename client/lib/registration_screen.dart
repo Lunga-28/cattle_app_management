@@ -1,3 +1,4 @@
+import 'package:cattle_management_app/config/api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -63,7 +64,7 @@ class _RegScreenState extends State<RegScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:3000/api/auth/signup'),
+        Uri.parse(ApiConfig.signUp),
         headers: {'Content-Type': 'application/json'},
         body: json.encode(body),
       );

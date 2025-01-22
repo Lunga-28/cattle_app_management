@@ -1,3 +1,4 @@
+import 'package:cattle_management_app/config/api_config.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -13,6 +14,7 @@ class AddFeedScreen extends StatefulWidget {
 
 class _AddFeedScreenState extends State<AddFeedScreen> {
   final _formKey = GlobalKey<FormState>();
+  bool isSubmitting = false;
   
   // Form controllers
   final nameController = TextEditingController();
@@ -35,8 +37,50 @@ class _AddFeedScreenState extends State<AddFeedScreen> {
   
   final List<String> units = ['kg', 'g', 'lbs', 'tons'];
 
+  Future<void> _addFinanceRecord(double cost) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('access_token');
+
+      if (token == null) {
+        if (!mounted) return;
+        Navigator.of(context).pushReplacementNamed('/login');
+        return;
+      }
+
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:3000/api/finances'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode({
+          'type': 'Expense',
+          'amount': cost,
+          'description': 'Feed purchase: ${nameController.text} (${selectedType}) - ${quantityController.text} ${selectedUnit}',
+          'date': DateTime.now().toIso8601String(),
+          'category': 'Feed',
+        }),
+      );
+
+      if (response.statusCode != 201) {
+        throw Exception('Failed to add finance record');
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error adding finance record: ${e.toString()}')),
+      );
+      rethrow;
+    }
+  }
+
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      isSubmitting = true;
+    });
 
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -48,7 +92,7 @@ class _AddFeedScreenState extends State<AddFeedScreen> {
       }
 
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:3000/api/feed'),
+        Uri.parse(ApiConfig.feeds),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -66,12 +110,27 @@ class _AddFeedScreenState extends State<AddFeedScreen> {
         }),
       );
 
+      if (!mounted) return;
+
       if (response.statusCode == 201) {
-        if (!mounted) return;
-        Navigator.pop(context, true);
+        // Calculate total cost
+        final quantity = double.parse(quantityController.text);
+        final unitCost = double.parse(costController.text);
+        final totalCost = quantity * unitCost;
+        
+        // Add corresponding finance record
+        await _addFinanceRecord(totalCost);
+
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Feed added successfully')),
+          const SnackBar(
+            content: Text('Feed and finance record added successfully'),
+            backgroundColor: Colors.green,
+          ),
         );
+        Navigator.pop(context, true);
+      } else if (response.statusCode == 401) {
+        await prefs.remove('access_token');
+        Navigator.of(context).pushReplacementNamed('/login');
       } else {
         throw Exception('Failed to add feed');
       }
@@ -79,6 +138,12 @@ class _AddFeedScreenState extends State<AddFeedScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: ${e.toString()}')),
       );
+    } finally {
+      if (mounted) {
+        setState(() {
+          isSubmitting = false;
+        });
+      }
     }
   }
 
@@ -95,11 +160,13 @@ class _AddFeedScreenState extends State<AddFeedScreen> {
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [TextFormField(
+            children: [
+              TextFormField(
                 controller: nameController,
                 decoration: const InputDecoration(
                   labelText: 'Feed Name*',
                   prefixIcon: Icon(Icons.label),
+                  border: OutlineInputBorder(),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -115,6 +182,7 @@ class _AddFeedScreenState extends State<AddFeedScreen> {
                 decoration: const InputDecoration(
                   labelText: 'Feed Type*',
                   prefixIcon: Icon(Icons.category),
+                  border: OutlineInputBorder(),
                 ),
                 items: feedTypes.map((String type) {
                   return DropdownMenuItem(
@@ -146,6 +214,7 @@ class _AddFeedScreenState extends State<AddFeedScreen> {
                       decoration: const InputDecoration(
                         labelText: 'Quantity*',
                         prefixIcon: Icon(Icons.scale),
+                        border: OutlineInputBorder(),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -164,6 +233,7 @@ class _AddFeedScreenState extends State<AddFeedScreen> {
                       value: selectedUnit,
                       decoration: const InputDecoration(
                         labelText: 'Unit*',
+                        border: OutlineInputBorder(),
                       ),
                       items: units.map((String unit) {
                         return DropdownMenuItem(
@@ -194,6 +264,7 @@ class _AddFeedScreenState extends State<AddFeedScreen> {
                 decoration: const InputDecoration(
                   labelText: 'Cost per Unit*',
                   prefixIcon: Icon(Icons.attach_money),
+                  border: OutlineInputBorder(),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -214,6 +285,7 @@ class _AddFeedScreenState extends State<AddFeedScreen> {
                   labelText: 'Stock Alert Threshold*',
                   prefixIcon: Icon(Icons.warning),
                   helperText: 'You will be notified when stock falls below this level',
+                  border: OutlineInputBorder(),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -232,31 +304,34 @@ class _AddFeedScreenState extends State<AddFeedScreen> {
                 decoration: const InputDecoration(
                   labelText: 'Supplier',
                   prefixIcon: Icon(Icons.business),
+                  border: OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 16),
               
-              ListTile(
-                leading: const Icon(Icons.calendar_today),
-                title: const Text('Expiry Date'),
-                subtitle: Text(
-                  expiryDate != null 
-                    ? DateFormat('MMM dd, yyyy').format(expiryDate!)
-                    : 'Not set'
+              Card(
+                child: ListTile(
+                  leading: const Icon(Icons.calendar_today),
+                  title: const Text('Expiry Date'),
+                  subtitle: Text(
+                    expiryDate != null 
+                      ? DateFormat('MMM dd, yyyy').format(expiryDate!)
+                      : 'Not set'
+                  ),
+                  onTap: () async {
+                    final DateTime? picked = await showDatePicker(
+                      context: context,
+                      initialDate: expiryDate ?? DateTime.now(),
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
+                    );
+                    if (picked != null) {
+                      setState(() {
+                        expiryDate = picked;
+                      });
+                    }
+                  },
                 ),
-                onTap: () async {
-                  final DateTime? picked = await showDatePicker(
-                    context: context,
-                    initialDate: expiryDate ?? DateTime.now(),
-                    firstDate: DateTime.now(),
-                    lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
-                  );
-                  if (picked != null) {
-                    setState(() {
-                      expiryDate = picked;
-                    });
-                  }
-                },
               ),
               const SizedBox(height: 16),
               
@@ -267,20 +342,29 @@ class _AddFeedScreenState extends State<AddFeedScreen> {
                   labelText: 'Notes',
                   prefixIcon: Icon(Icons.note),
                   alignLabelWithHint: true,
+                  border: OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 24),
               
               ElevatedButton(
-                onPressed: _submitForm,
+                onPressed: isSubmitting ? null : _submitForm,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF4CAF50),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                child: const Text(
-                  'Add Feed',
-                  style: TextStyle(fontSize: 16),
-                ),
+                child: isSubmitting
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation(Colors.white),
+                        ),
+                      )
+                    : const Text(
+                        'Add Feed',
+                        style: TextStyle(fontSize: 16),
+                      ),
               ),
             ],
           ),

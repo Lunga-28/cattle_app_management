@@ -1,3 +1,4 @@
+import 'package:cattle_management_app/config/api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -60,7 +61,7 @@ class _AddCattleScreenState extends State<AddCattleScreen> {
       print('Request data: $cattleData'); // Debug log
 
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:3000/api/cattle'),
+        Uri.parse(ApiConfig.cattle),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',

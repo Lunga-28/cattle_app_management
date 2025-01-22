@@ -1,3 +1,4 @@
+import 'package:cattle_management_app/config/api_config.dart';
 import 'package:flutter/material.dart';
 import 'registration_screen.dart';
 import 'package:http/http.dart' as http;
@@ -55,11 +56,10 @@ class _LoginScreenState extends State<LoginScreen>
       return;
     }
 
-    const String url = 'http://10.0.2.2:3000/api/auth/signin';
 
     try {
       final response = await http.post(
-        Uri.parse(url),
+        Uri.parse(ApiConfig.signIn),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',

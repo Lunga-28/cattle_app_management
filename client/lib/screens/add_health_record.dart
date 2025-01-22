@@ -1,3 +1,4 @@
+import 'package:cattle_management_app/config/api_config.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -60,7 +61,7 @@ class _AddHealthRecordScreenState extends State<AddHealthRecordScreen> {
       }
 
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:3000/api/cattle'),
+        Uri.parse(ApiConfig.cattle),
         headers: {
           'Authorization': 'Bearer $token',
         },
@@ -102,7 +103,7 @@ class _AddHealthRecordScreenState extends State<AddHealthRecordScreen> {
       }
 
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:3000/api/finances'),
+        Uri.parse(ApiConfig.finances),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -154,7 +155,7 @@ class _AddHealthRecordScreenState extends State<AddHealthRecordScreen> {
 
       // Add health record
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:3000/api/health'),
+        Uri.parse(ApiConfig.healthRecords),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
