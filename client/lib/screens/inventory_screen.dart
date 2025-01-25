@@ -215,14 +215,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
                               ],
                               onSelected: (value) {
                                 if (value == 'edit') {
-                                  // TODO: Implement edit functionality
+                                
                                 } else if (value == 'delete') {
                                   _deleteCattle(animal['_id']);
                                 }
                               },
                             ),
                             onTap: () {
-                              // TODO: Navigate to cattle detail screen
+                              
                             },
                           ),
                         );
